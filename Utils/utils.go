@@ -464,12 +464,11 @@ func EqualSplitData(num, n int) []int {
 			arr[i] = tmp
 		}
 	} else {
-		tmp := (num - num%n) / (n - 1)
+		tmp := (num - num%n) / n
 		for i := 0; i < n-1; i++ {
 			arr[i] = tmp
-			num -= tmp
 		}
-		arr[n-1] = num
+		arr[n-1] = tmp + num%n
 	}
 	return arr
 }

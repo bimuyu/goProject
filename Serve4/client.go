@@ -2,8 +2,13 @@ package main
 
 import (
 	"bigData/Utils"
+	"bufio"
 	"fmt"
+	"io"
 	"net"
+	"os"
+	"strconv"
+	"strings"
 )
 
 func main() {
@@ -15,23 +20,30 @@ func main() {
 	}
 
 	u := new(Utils.QuickSortStruct)
-
-	sendDataToServe(conn, *u)
+	arr := []interface{}{"a", "b", "c", "d", "e", "f", "abc", "abb"}
+	u.IsAsc = true
+	u.IsFile = false
+	u.DataType = "string"
+	if u.IsFile {
+		u.SendFilePath = ""
+	} else {
+		u.Data = arr
+	}
+	u.SendDataToServe(conn)
 	for {
-		receiveDataFromServe(conn, *u)
+		u.ReceiveDataFromServe(conn)
 	}
 }
 
-func sendDataToServe(conn net.Conn, u Utils.QuickSortStruct) {
+func SendDataToServe(conn net.Conn, u Utils.QuickSortStruct) {
 	if conn == nil {
 		fmt.Println("client is empty")
 		return
 	}
-
-	arr := []string{"a", "b", "c", "d", "e", "f", "abc", "abb"}
-	u.IsAsc = true
-	u.IsFile = true
-	u.DataType = "string"
+	if u.IsFile && u.SendFilePath == "" {
+		fmt.Println("send file is empty")
+		os.Exit(404)
+	}
 	//arr := []int{7, 9, 2, 8, 3, 3, 3, 9, 9, 11, 17, 16, 13}
 	// sent to client
 	byte0 := Utils.IntToBytes(0)
@@ -51,15 +63,57 @@ func sendDataToServe(conn net.Conn, u Utils.QuickSortStruct) {
 	}
 	start := append(append(engine, byte0...), byte0...)
 	conn.Write(start)
-	for i := 0; i < len(arr); i++ {
-		toByte := u.DataFormatToByte(arr[i])
-		conn.Write(append(engine, toByte...))
+	// 获取数据长度
+	length := 0
+	if u.IsFile {
+		length = Utils.GetFileLineNumber(u.SendFilePath)
+		open, err := os.Open(u.SendFilePath)
+		Utils.ManageError(err)
+		reader := bufio.NewReader(open)
+		// 从文件中读取数据 并转成对应的格式
+		for {
+			line, _, err := reader.ReadLine()
+			if err == io.EOF {
+				break
+			}
+			tmpStr := string(line)
+			if tmpStr == "" {
+				continue
+			}
+			toByte := make([]byte, 0)
+			if u.DataType == "int" {
+				tmp, _ := strconv.Atoi(tmpStr)
+				toByte = u.DataFormatToByte(tmp)
+			} else if "float64" == u.DataType {
+				tmp, _ := strconv.ParseFloat(tmpStr, 64)
+				toByte = u.DataFormatToByte(tmp)
+			} else if "string" == u.DataType {
+				toByte = u.DataFormatToByte(tmpStr)
+			} else if "struct" == u.DataType {
+				split := strings.Split(tmpStr, " # ")
+				s := new(Utils.SortDemoStruct)
+				s.Info = split[0]
+				s.Times, _ = strconv.Atoi(split[1])
+				toByte = u.DataFormatToByte(s)
+			} else {
+				fmt.Println("error data type")
+				os.Exit(404)
+			}
+			//toByte := u.DataFormatToByte(tmp)
+			conn.Write(append(engine, toByte...))
+		}
+	} else {
+		length = len(u.Data)
+		for i := 0; i < length; i++ {
+			toByte := u.DataFormatToByte(u.Data[i])
+			conn.Write(append(engine, toByte...))
+		}
 	}
 	end := append(append(engine, byte0...), sortByte...)
 	conn.Write(end)
 }
 
-func receiveDataFromServe(conn net.Conn, u Utils.QuickSortStruct) {
+func ReceiveDataFromServe(conn net.Conn, u Utils.QuickSortStruct) {
 	if conn == nil {
 		fmt.Println("connect error")
 		return

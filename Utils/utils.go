@@ -749,3 +749,10 @@ func MergeTwoFileAsOne(file1, file2 string, i int) string {
 	f2.Close()
 	return path
 }
+
+func ManageError(err error) {
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(404)
+	}
+}

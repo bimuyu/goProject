@@ -749,9 +749,69 @@ func MergeTwoFileAsOne(file1, file2 string, i int) string {
 	return path
 }
 
+// 错误处理
 func ManageError(err error) {
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(404)
+	}
+}
+
+// 简单选择排序
+func SimpleSelectSort(arr []int, isAsc bool) []int {
+	if len(arr) <= 1 {
+		return arr
+	} else {
+		for i := 0; i < len(arr); i++ {
+			tmp := i
+			for j := i + 1; j < len(arr); j++ {
+				if arr[tmp] > arr[j] {
+					if isAsc {
+						tmp = j
+					}
+				} else {
+					if !isAsc {
+						tmp = j
+					}
+				}
+			}
+			if tmp != i {
+				arr[i], arr[tmp] = arr[tmp], arr[i]
+			}
+		}
+		return arr
+	}
+}
+
+// 简单堆排序
+func SimpleHeapSort(arr []int) []int {
+	for i := 0; i < len(arr); i++ {
+		privateHeapSort(arr, len(arr)-i)
+		if i < len(arr) {
+			arr[0], arr[len(arr)-i-1] = arr[len(arr)-i-1], arr[0]
+		}
+	}
+	return arr
+}
+func privateHeapSort(arr []int, len int) []int {
+	if len <= 1 {
+		return arr
+	} else {
+		depth := len/2 - 1
+		for i := depth; i >= 0; i-- {
+			maxIndex := i
+			leftIndex := 2*i + 1
+			rightIndex := 2*i + 2
+			if leftIndex <= len-1 && arr[leftIndex] < arr[maxIndex] {
+				maxIndex = leftIndex
+			}
+			if rightIndex <= len-1 && arr[rightIndex] < arr[maxIndex] {
+				maxIndex = rightIndex
+			}
+			if maxIndex != i {
+				arr[maxIndex], arr[i] = arr[i], arr[maxIndex]
+			}
+		}
+		return arr
 	}
 }

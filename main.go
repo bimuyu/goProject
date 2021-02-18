@@ -40,7 +40,9 @@ func main() {
 	//floatAndByteExchange()
 	//sortInterfaceDemo()
 	//Utils.JsonDemo()
-	fileMergeDemo()
+	//fileMergeDemo()
+	//selectSortDemo()
+	heapSortDemo()
 }
 
 func mysqlConnectDemo() {
@@ -162,11 +164,11 @@ func QQPasswordDictionary() {
 
 func numberEqualSplit() {
 	data := Utils.EqualSplitData(97, 10)
-	fmt.Println(data)
+	fmt.Println(data, 97)
 	data = Utils.EqualSplitData(101, 10)
-	fmt.Println(data)
+	fmt.Println(data, 101)
 	data = Utils.EqualSplitData(100, 10)
-	fmt.Println(data)
+	fmt.Println(data, 102)
 }
 
 func sliceFile() {
@@ -247,7 +249,7 @@ func sortInterfaceDemo() {
 	fmt.Println("排序后：", data.Data)
 }
 
-func fileMergeDemo()  {
+func fileMergeDemo() {
 	fileList := []string{
 		"/Users/magic/web/golang/source/csdn_split/csdn_pwd_0.txt",
 		"/Users/magic/web/golang/source/csdn_split/csdn_pwd_1.txt",
@@ -261,4 +263,18 @@ func fileMergeDemo()  {
 	}
 	path := Utils.MergeFileListAsOne(fileList)
 	fmt.Println(path)
+}
+
+func selectSortDemo() {
+	arrFunc := Utils.MakeArrFunc(10)
+	fmt.Println(arrFunc)
+	sort := Utils.SimpleSelectSort(arrFunc, true)
+	fmt.Println(sort)
+}
+
+func heapSortDemo() {
+	arrFunc := Utils.MakeArrFunc(10)
+	fmt.Println(arrFunc)
+	sort := Utils.SimpleHeapSort(arrFunc)
+	fmt.Println(sort)
 }

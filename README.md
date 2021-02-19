@@ -46,6 +46,6 @@ Utils/sortInterface.go文件
 ```
 Utils/sortInterface.go文件和Serve4文件夹
  在自定义协议数据传输实现的基础上继续开发，并实现数据的分布式传输，
- 其中：master实现文件切割，并发送给不同的slave，在slave把数据处理完成后，返回给master然后进行数据归并
+ 其中：master实现文件切割，并发送给不同的slave，slave按照协议处理数据，返回给master然后进行数据归并
 ```
 

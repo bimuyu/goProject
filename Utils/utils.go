@@ -14,6 +14,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -757,7 +758,7 @@ func ManageError(err error) {
 	}
 }
 
-// 简单选择排序
+// 简单选择排序 可以快速的选择出最大或者最小值
 func SimpleSelectSort(arr []int, isAsc bool) []int {
 	if len(arr) <= 1 {
 		return arr
@@ -814,4 +815,82 @@ func privateHeapSort(arr []int, len int) []int {
 		}
 		return arr
 	}
+}
+
+// 简单冒泡排序
+func BubbleSortDemo(arr []int, isAsc bool) []int {
+	if len(arr) <= 1 {
+		return arr
+	}
+	for i := 0; i < len(arr)-1; i++ {
+		for j := 0; j < len(arr)-i-1; j++ {
+			if isAsc {
+				if arr[j] > arr[j+1] {
+					arr[j], arr[j+1] = arr[j+1], arr[j]
+				}
+			} else {
+				if arr[j] < arr[j+1] {
+					arr[j], arr[j+1] = arr[j+1], arr[j]
+				}
+			}
+		}
+	}
+	return arr
+}
+
+// 希尔排序
+func ShellSortDemo(arr []int) []int {
+	if len(arr) <= 1 {
+		return arr
+	}
+	step := len(arr) / 2
+	for step > 0 {
+		for i := 0; i < step; i++ {
+			privateShellSort(arr, i, step)
+		}
+		step /= 2
+	}
+	return arr
+}
+func privateShellSort(arr []int, index, step int) []int {
+	for i := index + step; i < len(arr); i += step {
+		insertVal := arr[i]
+		insertIndex := i - step
+		if insertIndex >= 0 && arr[insertIndex] < insertVal {
+			arr[insertIndex+step] = arr[insertIndex]
+			insertIndex -= step
+		}
+		arr[insertIndex+step] = insertVal
+	}
+	return arr
+}
+
+// 多线程希尔排序
+func OptimizeShellSort(arr []int) []int{
+	if len(arr) < 2 || arr == nil {
+		return nil
+	}
+	cpuNum := runtime.NumCPU()
+	wg := sync.WaitGroup{}
+	for step := len(arr); step > 0; step /= 2 {
+		wg.Add(cpuNum)
+		ch := make(chan int, 1000)
+		go func() {
+			for k := 0; k < step; k++ {
+				ch <- k
+			}
+			close(ch)
+		}()
+
+		for k := 0; k < cpuNum; k++ {
+			go func() {
+				for v := range ch {
+					privateShellSort(arr,v,step)
+				}
+			}()
+			wg.Done()
+		}
+		wg.Wait()
+	}
+	return arr
 }

@@ -5,6 +5,8 @@ import (
 	"bigData/QQ"
 	"bigData/Utils"
 	"fmt"
+	"os"
+	"time"
 )
 
 func main() {
@@ -17,6 +19,10 @@ func main() {
 	//QQPasswordTimes()
 	// 四、按照密码次数排序
 	//QQPasswordDictionary()
+	// 五、获取所有都qq号
+	//getAllQQNumber()
+	// 六、qq号码排序
+	//QQNumberSort()
 	/* ------------ qq密码字典结束 ------------- */
 	//mysqlConnectDemo()
 	//dataClearToNewFileDemo()
@@ -42,7 +48,12 @@ func main() {
 	//Utils.JsonDemo()
 	//fileMergeDemo()
 	//selectSortDemo()
-	heapSortDemo()
+	//heapSortDemo()
+	//bubbleSortDemo()
+	//shellSortDemo()
+	//radixSortDemo()
+	//getQQNumberSearchIndex()
+	binSearchQQNumberSearchIndex()
 }
 
 func mysqlConnectDemo() {
@@ -136,7 +147,7 @@ func traverseDemo() {
 
 func GetQQPasswordFromFile() {
 	sourcePath := "/Users/magic/web/golang/source/QQPWD/QQBig.txt"
-	savePath := "/Users/magic/web/golang/source/QQPWD/only_qq_pwd.txt"
+	savePath := "/Users/magic/web/golang/source/QQPWD/only_qq_pwd2.txt"
 	QQ.GetQQPwd(sourcePath, savePath)
 }
 
@@ -277,4 +288,69 @@ func heapSortDemo() {
 	fmt.Println(arrFunc)
 	sort := Utils.SimpleHeapSort(arrFunc)
 	fmt.Println(sort)
+}
+
+func bubbleSortDemo() {
+	arrFunc := Utils.MakeArrFunc(10)
+	fmt.Println(arrFunc)
+	sort := Utils.BubbleSortDemo(arrFunc, false)
+	fmt.Println(sort)
+}
+
+func shellSortDemo() {
+	arrFunc := Utils.MakeArrFunc(30)
+	fmt.Println(time.Now().Unix())
+	Utils.ShellSortDemo(arrFunc)
+	fmt.Println(time.Now().Unix())
+	Utils.OptimizeShellSort(arrFunc)
+	fmt.Println(time.Now().Unix())
+}
+
+func radixSortDemo() {
+	arr := []int{1, 2, 3, 4, 4, 3, 2, 1, 2, 3, 1, 2, 3, 4, 1, 2, 2, 2, 2, 3, 4, 1}
+	fmt.Println(Utils.RadixSortDemo(arr))
+}
+
+func getAllQQNumber() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/QQBig.txt"
+	savePath := "/Users/magic/web/golang/source/QQPWD/only_qq_number.txt"
+	QQ.GetQQNumber(sourcePath, savePath)
+}
+
+func QQNumberSort() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/only_qq_number.txt"
+	savePath := "/Users/magic/web/golang/source/QQPWD/qq_number_sort.txt"
+	QQ.QQPwdQuickSort(sourcePath, savePath)
+}
+
+func getQQNumberSearchIndex() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_number_sort.txt"
+	searchIndex := QQ.MakeSearchIndexForQQNumber(sourcePath)
+	open, _ := os.Open(sourcePath)
+	// 移动位置
+	open.Seek(0, 0)
+	for {
+		var lineNumber int64
+		fmt.Scanf("%d", &lineNumber)
+		fmt.Println("位置：",searchIndex[lineNumber])
+		open.Seek(int64(searchIndex[lineNumber]), 0)
+		bytes := make([]byte, 12, 12)
+		read, _ := open.Read(bytes)
+		var endPosition int
+		for i := 0; i < read; i++ {
+			// 换行符表示结束 5是最短的qq号
+			if bytes[i] == '\n' && i >= 5 {
+				endPosition = i
+				break
+			}
+		}
+		fmt.Println("对应的数据：", string(bytes[:endPosition]))
+	}
+	open.Close()
+}
+
+func binSearchQQNumberSearchIndex()  {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_number_sort.txt"
+	qq := "9324834"
+	QQ.GetSearchIndexLineNumber(qq, sourcePath)
 }

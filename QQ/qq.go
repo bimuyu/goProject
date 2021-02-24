@@ -1,11 +1,13 @@
 package QQ
 
 import (
+	"bigData/Utils"
 	"bufio"
 	"fmt"
 	"io"
 	"math/rand"
 	"os"
+	"regexp"
 	"runtime"
 	"runtime/debug"
 	"strconv"
@@ -29,6 +31,10 @@ func GetQQPwd(source, save string) {
 	}
 	defer create.Close()
 	writer := bufio.NewWriter(create)
+	reg1 := `^[1-9][0-9]{4,11}$`
+	reg2 := `^.{6,25}$`
+	regx1 := regexp.MustCompile(reg1)
+	regx2 := regexp.MustCompile(reg2)
 	for {
 		line, _, err := reader.ReadLine()
 		if err == io.EOF {
@@ -37,7 +43,11 @@ func GetQQPwd(source, save string) {
 		tmp := string(line)
 		split := strings.Split(tmp, "----")
 		if len(split) == 2 {
-			writer.WriteString(split[1] + "\n")
+			//if regx1.MatchString(split[1]) && regx2.MatchString(split[1]) {
+			if regx1.Match([]byte(split[0])) && regx2.Match([]byte(split[1])) {
+				//writer.WriteString(split[1] + "\n")
+				fmt.Fprintln(writer, split[1])
+			}
 		}
 	}
 	writer.Flush()
@@ -46,11 +56,11 @@ func GetQQPwd(source, save string) {
 
 func QQPwdQuickSort(source, save string) {
 	// 获取密码行数
-	//number := Utils.GetFileLineNumber(source)
-	//fmt.Println(number)
+	number := Utils.GetFileLineNumber(source)
+	fmt.Println(number)
 	//os.Exit(1)
 	//number := 6428632
-	number := 156783175
+	//number := 156783175
 	fmt.Println("总数据量：", number)
 	// 读取文件到内存
 	open, err := os.Open(source)
@@ -250,10 +260,10 @@ type QQPwdStruct struct {
 
 // 创建qq密码字典
 func CreateQQPasswordDictionary(source, save string) {
-	//number := Utils.GetFileLineNumber(source)
-	//fmt.Println(number)
+	number := Utils.GetFileLineNumber(source)
+	fmt.Println(number)
 	//os.Exit(1)
-	number := 117334647 //qq
+	//number := 117334647 //qq
 	//number := 4038251     //csdn
 	fmt.Println("开始", time.Now().Unix())
 	pwd := make([]QQPwdStruct, number, number)
@@ -413,4 +423,110 @@ func qqPwdStructSaveToFile(pwd []QQPwdStruct, save string) {
 		writer.WriteString(v.pwd + " # " + itoa + "\n")
 	}
 	writer.Flush()
+}
+
+// 获取所有都qq号码
+func GetQQNumber(source, save string) {
+	open, err := os.Open(source)
+	if err != nil {
+		fmt.Println("file open err")
+		return
+	}
+	defer open.Close()
+	reader := bufio.NewReader(open)
+	create, err := os.Create(save)
+	if err != nil {
+		fmt.Println("file create err")
+		return
+	}
+	defer create.Close()
+	writer := bufio.NewWriter(create)
+	reg1 := `^[1-9][0-9]{4,11}$`
+	regx1 := regexp.MustCompile(reg1)
+	for {
+		line, _, err := reader.ReadLine()
+		if err == io.EOF {
+			break
+		}
+		tmp := string(line)
+		split := strings.Split(tmp, "----")
+		if len(split) == 2 {
+			if regx1.Match([]byte(split[0])) {
+				fmt.Fprintln(writer, split[0])
+			}
+		}
+	}
+	writer.Flush()
+	fmt.Println("所有qq号码提取并写入完成")
+}
+
+// 根据qq号码创建索引
+// 一次读取每行文件都字节数 然后把数据转换为位置来节省内存
+func MakeSearchIndexForQQNumber(source string) []int {
+	//number := Utils.GetFileLineNumber(source)
+	number := 156783175
+	index := make([]int, number, number)
+	open, err := os.Open(source)
+	Utils.ManageError(err)
+	reader := bufio.NewReader(open)
+	index[0] = 0
+	i := 1
+	for {
+		line, _, err := reader.ReadLine()
+		if err == io.EOF {
+			break
+		}
+		tmp := string(line)
+		if len(tmp) <= 0 {
+			continue
+		}
+		if i < number {
+			// 加上换行符的长度
+			index[i] = len(tmp) + 1
+		}
+		i++
+	}
+	open.Close()
+	fmt.Println("1、数据索引加载完成")
+	for j := 0; j < len(index)-1; j++ {
+		index[j+1] += index[j]
+	}
+	fmt.Println("2、数据索引叠加完成")
+	return index
+}
+
+func GetSearchIndexLineNumber(qq string, source string) {
+	indexList := MakeSearchIndexForQQNumber(source)
+	open, _ := os.Open(source)
+	defer open.Close()
+	left := 0
+	right := len(indexList) - 1
+	for left <= right {
+		mid := (left + right) / 2
+		index := privateGetDataFromSearchIndexByIndex(indexList, mid, open)
+		if index > qq {
+			right = mid - 1
+		} else if index < qq {
+			left = mid + 1
+		} else {
+			fmt.Println("所在行数是：", mid)
+			return
+		}
+	}
+	fmt.Println("位置不存在")
+}
+func privateGetDataFromSearchIndexByIndex(indexList []int, index int, open *os.File) string {
+	open.Seek(0, 0)
+	i := indexList[index]
+	open.Seek(int64(i), 0)
+	bytes := make([]byte, 12, 12)
+	read, _ := open.Read(bytes)
+	tmp := 0
+	for j := 0; j < read; j++ {
+		if bytes[j] == '\n' && j >= 5 {
+			tmp = j
+			break
+		}
+	}
+	return string(bytes[:tmp])
 }

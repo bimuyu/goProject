@@ -144,7 +144,7 @@ func MakeArrFunc(number int) []int {
 	var arr []int
 	source := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for i := 0; i < number; i++ {
-		intn := source.Intn(1000)
+		intn := source.Intn(number)
 		arr = append(arr, intn)
 	}
 	return arr
@@ -866,7 +866,7 @@ func privateShellSort(arr []int, index, step int) []int {
 }
 
 // 多线程希尔排序
-func OptimizeShellSort(arr []int) []int{
+func OptimizeShellSort(arr []int) []int {
 	if len(arr) < 2 || arr == nil {
 		return nil
 	}
@@ -885,7 +885,7 @@ func OptimizeShellSort(arr []int) []int{
 		for k := 0; k < cpuNum; k++ {
 			go func() {
 				for v := range ch {
-					privateShellSort(arr,v,step)
+					privateShellSort(arr, v, step)
 				}
 			}()
 			wg.Done()
@@ -893,4 +893,23 @@ func OptimizeShellSort(arr []int) []int{
 		wg.Wait()
 	}
 	return arr
+}
+
+// 基数排序
+// 适用于数据量大 但是数据范围少的数据进行排序
+// 如身高范围、学历等数据排序
+func RadixSortDemo(arr []int) []int {
+	var tmp [4][]int
+	for i := 0; i < len(arr); i++ {
+		tmp[arr[i]-1] = append(tmp[arr[i]-1], arr[i])
+	}
+	res := make([]int, len(arr), len(arr))
+	n := 0
+	for i := 0; i < len(tmp); i++ {
+		for j := 0; j < len(tmp[i]); j++ {
+			res[n] = tmp[i][j]
+			n++
+		}
+	}
+	return res
 }

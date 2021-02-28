@@ -6,6 +6,7 @@ import (
 	"bigData/Utils"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -23,6 +24,27 @@ func main() {
 	//getAllQQNumber()
 	// 六、qq号码排序
 	//QQNumberSort()
+	//getQQNumberSearchIndex()
+	//binSearchQQNumberSearchIndex()
+	//putQQSearchIndexToFile()
+	// 过滤异常数据
+	//clearQQData()
+	// 数据按照qq大小排序
+	//qqDataOrderByQQNumber()
+	// 从文件中查询qq账号密码
+	//searchQQPwdFromFile()
+	// 二分快速查找qq账号密码
+	//binarySearchQQPwdFromFile()
+	// 生产文件随机访问索引数组
+	//makeQQAccountSearchIndexArray()
+	// 通过索引数组快速查找密码
+	//searchQQAccountPwdUseSearchIndexArray()
+	// 查询索引文件保存到文件
+	//putQQAccountSearchIndexToFile()
+	// 使用查询索引文件 根据行号快速查询
+	//quickFindQQAccountDataUseSearchIndexForLineNumber()
+	// 使用查询索引文件 快速查询qq密码
+	quickFindQQAccountPwdUseSearchIndex()
 	/* ------------ qq密码字典结束 ------------- */
 	//mysqlConnectDemo()
 	//dataClearToNewFileDemo()
@@ -52,8 +74,6 @@ func main() {
 	//bubbleSortDemo()
 	//shellSortDemo()
 	//radixSortDemo()
-	//getQQNumberSearchIndex()
-	binSearchQQNumberSearchIndex()
 }
 
 func mysqlConnectDemo() {
@@ -332,7 +352,7 @@ func getQQNumberSearchIndex() {
 	for {
 		var lineNumber int64
 		fmt.Scanf("%d", &lineNumber)
-		fmt.Println("位置：",searchIndex[lineNumber])
+		fmt.Println("位置：", searchIndex[lineNumber])
 		open.Seek(int64(searchIndex[lineNumber]), 0)
 		bytes := make([]byte, 12, 12)
 		read, _ := open.Read(bytes)
@@ -349,8 +369,115 @@ func getQQNumberSearchIndex() {
 	open.Close()
 }
 
-func binSearchQQNumberSearchIndex()  {
+func binSearchQQNumberSearchIndex() {
 	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_number_sort.txt"
-	qq := "9324834"
+	qq := "450638786"
 	QQ.GetSearchIndexLineNumber(qq, sourcePath)
+}
+
+func putQQSearchIndexToFile() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_number_sort.txt"
+	savePath := "/Users/magic/web/golang/source/QQPWD/qq_number_sort_index.txt"
+	QQ.PutQQSearchIndexToFile(sourcePath, savePath)
+}
+
+func clearQQData() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/QQBig.txt"
+	savePath := "/Users/magic/web/golang/source/QQPWD/right_qq.txt"
+	errorPath := "/Users/magic/web/golang/source/QQPWD/wrong_qq.txt"
+	QQ.ClearQQData(sourcePath, savePath, errorPath)
+}
+
+func qqDataOrderByQQNumber() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/right_qq.txt"
+	savePath := "/Users/magic/web/golang/source/QQPWD/qq_sort.txt"
+	QQ.QQDataOrderByQQNumber(sourcePath, savePath)
+}
+
+func searchQQPwdFromFile() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_sort.txt"
+	arr := QQ.ReadQQAccountSortDataToMemory(sourcePath)
+	fmt.Println("请输入qq号")
+	for {
+		var qq string
+		fmt.Scanf("%s", &qq)
+		for i := 0; i < len(arr); i++ {
+			if strings.Contains(arr[i], qq) {
+				fmt.Println(arr[i])
+			}
+		}
+		fmt.Println("搜索完毕，请输入qq号")
+	}
+}
+
+func binarySearchQQPwdFromFile() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_sort.txt"
+	arr := QQ.ReadQQAccountSortDataToMemoryAsStruct(sourcePath)
+	fmt.Println("请输入qq号")
+	for {
+		var qq int
+		fmt.Scanf("%d", &qq)
+		index := QQ.BinarySearchQQPwdFromStruct(arr, qq)
+		if -1 == index {
+			fmt.Println("没有找到")
+		} else {
+			fmt.Println(index, arr[index].QQNumber, arr[index].QQPwd)
+		}
+		fmt.Println("搜索完毕，请输入qq号")
+	}
+}
+
+func makeQQAccountSearchIndexArray() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_sort.txt"
+	arr := QQ.MakeQQAccountSearchIndexArray(sourcePath)
+	file, _ := os.Open(sourcePath)
+	fmt.Println("请输入行号")
+	for {
+		var lineNumber int
+		fmt.Scanf("%d", &lineNumber)
+		QQ.SearchQQAccountByLineNumber(arr, lineNumber, file)
+	}
+}
+
+func searchQQAccountPwdUseSearchIndexArray() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_sort.txt"
+	arr := QQ.MakeQQAccountSearchIndexArray(sourcePath)
+	file, _ := os.Open(sourcePath)
+	fmt.Println("请输入qq号")
+	for {
+		var qq int
+		fmt.Scanf("%d", &qq)
+		QQ.SearchQQAccountPwdUseSearchIndexArray(arr, qq, file)
+	}
+}
+
+func putQQAccountSearchIndexToFile() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_sort.txt"
+	savePath := "/Users/magic/web/golang/source/QQPWD/qq_search_index.txt"
+	QQ.PutQQAccountSearchIndexToFile(sourcePath, savePath)
+}
+
+func quickFindQQAccountDataUseSearchIndexForLineNumber() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_sort.txt"
+	indexPath := "/Users/magic/web/golang/source/QQPWD/qq_search_index.txt"
+	QQ.QuickFindQQAccountDataUseSearchIndexForLineNumber(sourcePath, indexPath)
+}
+
+func quickFindQQAccountPwdUseSearchIndex() {
+	sourcePath := "/Users/magic/web/golang/source/QQPWD/qq_sort.txt"
+	indexPath := "/Users/magic/web/golang/source/QQPWD/qq_search_index.txt"
+	fmt.Println("请输QQ号")
+	source, _ := os.Open(sourcePath)
+	index, _ := os.Open(indexPath)
+	defer func() {
+		source.Close()
+		index.Close()
+	}()
+	source.Seek(0, 0)
+	index.Seek(0, 0)
+	for {
+		var qq int
+		fmt.Scanf("%d", &qq)
+		QQ.QuickFindQQAccountPwdUseSearchIndex(qq, source, index)
+	}
 }

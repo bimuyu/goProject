@@ -3,6 +3,7 @@ package QQ
 import (
 	"bigData/Utils"
 	"bufio"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"math/rand"
@@ -264,7 +265,7 @@ func CreateQQPasswordDictionary(source, save string) {
 	fmt.Println(number)
 	//os.Exit(1)
 	//number := 117334647 //qq
-	//number := 4038251     //csdn
+	//number := 4038251   //csdn
 	fmt.Println("开始", time.Now().Unix())
 	pwd := make([]QQPwdStruct, number, number)
 	fmt.Println("数组大小：", len(pwd))
@@ -463,6 +464,13 @@ func GetQQNumber(source, save string) {
 // 根据qq号码创建索引
 // 一次读取每行文件都字节数 然后把数据转换为位置来节省内存
 func MakeSearchIndexForQQNumber(source string) []int {
+	indexPath := "/Users/magic/web/golang/source/QQPWD/qq_number_sort_index.txt"
+	_, err2 := os.Stat(indexPath)
+	if err2 == nil {
+		fmt.Println("磁盘索引数据")
+		return getQQSearchIndexFromFile(source, indexPath)
+	}
+	fmt.Println("内存索引数据")
 	//number := Utils.GetFileLineNumber(source)
 	number := 156783175
 	index := make([]int, number, number)
@@ -495,6 +503,7 @@ func MakeSearchIndexForQQNumber(source string) []int {
 	return index
 }
 
+// 查找qq所在行数
 func GetSearchIndexLineNumber(qq string, source string) {
 	indexList := MakeSearchIndexForQQNumber(source)
 	open, _ := os.Open(source)
@@ -529,4 +538,50 @@ func privateGetDataFromSearchIndexByIndex(indexList []int, index int, open *os.F
 		}
 	}
 	return string(bytes[:tmp])
+}
+
+// qq索引文件保存到文件
+func PutQQSearchIndexToFile(source, save string) {
+	indexs := MakeSearchIndexForQQNumber(source)
+	create, _ := os.Create(save)
+	writer := bufio.NewWriter(create)
+	fmt.Println("start write index")
+	for i := 0; i < len(indexs); i++ {
+		bytes := make([]byte, 4)
+		binary.BigEndian.PutUint32(bytes, uint32(indexs[i]))
+		writer.Write(bytes)
+		if i%10000000 == 0 {
+			fmt.Println(i)
+		}
+	}
+	writer.Flush()
+	create.Close()
+	fmt.Println("finish write index")
+}
+
+// 根据索引文件查询位置
+func getQQSearchIndexFromFile(sourcePath, indexPath string) []int {
+	lineNumber := Utils.GetFileLineNumber(sourcePath)
+	index, _ := os.Open(indexPath)
+	//reader := bufio.NewReader(index)
+	ints := make([]int, lineNumber, lineNumber)
+	i := 0
+	for {
+		index.Seek(int64(i*4), 0)
+		bytes := make([]byte, 4)
+		index.Read(bytes)
+		//reader.Read(bytes)
+		u := binary.BigEndian.Uint32(bytes)
+		i++
+		if i >= 156783175 {
+			break
+		}
+		if i%10000000 == 0 {
+			fmt.Println(i)
+		}
+		ints[i] = int(u)
+	}
+	index.Close()
+	fmt.Println("磁盘数据索引完成")
+	return ints
 }

@@ -49,3 +49,11 @@ Utils/sortInterface.go文件和Serve4文件夹
  其中：master实现文件切割，并发送给不同的slave，slave按照协议处理数据，返回给master然后进行数据归并
 ```
 
+#### 4、快速查询之文件索引
+
+```
+使用查询索引文件 快速查询qq密码
+	quickFindQQAccountPwdUseSearchIndex()
+通过数据排序，并生成数据查询索引文件；该方法实现对4G大小文件的遍历，并可以做到使用2M左右的内存可以秒速查询出对应的数据
+```
+
